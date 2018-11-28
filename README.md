@@ -1,5 +1,6 @@
 # Hermipy
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a1588a65d35340959ecb5ca500e14121)](https://app.codacy.com/app/urbainvaes/hermipy?utm_source=github.com&utm_medium=referral&utm_content=urbainvaes/hermipy&utm_campaign=Badge_Grade_Dashboard)
 [![Documentation Status](https://readthedocs.org/projects/hermipy/badge/?version=latest)](https://hermipy.readthedocs.io/en/latest/?badge=latest)
 [![Test coverage](./tests/.coverage.svg)](./tests/.coverage)
 
