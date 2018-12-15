@@ -92,8 +92,7 @@ class Series:
             self.degree = core.iterator_get_degree(dim, npolys,
                                                    index_set=index_set)
 
-            if __debug__:
-                assert len(self.multi_indices()) == len(self.coeffs)
+            assert len(self.multi_indices()) == len(self.coeffs)
 
         if significant is not 0:
             for i, c in enumerate(self.coeffs):
@@ -105,8 +104,8 @@ class Series:
             self.coeffs = self.coeffs.copy(order='C')
 
     def __eq__(self, other):
-        if __debug__:
-            assert isinstance(other, Series)
+        if not isinstance(other, Series):
+            raise ValueError("Invalid argument")
         return self.position == other.position \
             and self.factor == other.factor \
             and la.norm(self.coeffs - other.coeffs) < very_small
@@ -117,10 +116,10 @@ class Series:
             new_coeffs = self.coeffs + other
 
         elif isinstance(other, Series):
-            if __debug__:
-                assert self.position == other.position
-                assert self.index_set == other.index_set
-                assert self.factor == other.factor
+            if not self.position == other.position or \
+               not self.index_set == other.index_set or \
+               not self.factor == other.factor:
+                raise ValueError("Invalid arguments")
             new_coeffs = self.coeffs + other.coeffs
 
             #  TODO: Add support for addition of different degrees / index sets
@@ -139,8 +138,8 @@ class Series:
                           factor=self.factor, index_set=self.index_set)
 
         elif isinstance(other, Series):
-            if __debug__:
-                assert self.index_set == other.index_set
+            if not self.index_set == other.index_set:
+                raise ValueError("Index sets must match")
             return Series.tensorize([self, other])
 
         else:
@@ -155,24 +154,23 @@ class Series:
         return self * (-1)
 
     def __truediv__(self, other):
-        if __debug__:
-            assert isinstance(other, (int, float, np.float64))
+        if not isinstance(other, (int, float, np.float64)):
+            raise ValueError("Invalid argument")
         new_coeffs = self.coeffs / other
         return Series(new_coeffs, self.position,
                       factor=self.factor, index_set=self.index_set)
 
     def __repr__(self):
         m_list = self.multi_indices()
-        if __debug__:
-            assert len(m_list) == len(self.coeffs)
+        assert len(m_list) == len(self.coeffs)
         result = ""
         for m, c in zip(m_list, self.coeffs):
             result += str(m) + ": " + str(c) + "\n"
         return result
 
     def __float__(self):
-        if __debug__:
-            assert self.position.dim is 0
+        if self.position.dim is not 0:
+            raise ValueError("Dimension must be 0")
         return float(self.coeffs[0])
 
     def __getitem__(self, index):
@@ -192,8 +190,8 @@ class Series:
     def subdegree(self, degree):
 
         # At the moment, only works if index set is consistent
-        if __debug__:
-            assert self.index_set is not "cross_nc"
+        if self.index_set == "cross_nc":
+            raise ValueError("cross_nc not supported")
         n_polys = core.iterator_size(self.position.dim, degree,
                                      index_set=self.index_set)
 
@@ -256,8 +254,8 @@ class Series:
             return pl
 
     def to_function(self):
-        if __debug__:
-            assert self.position.is_diag
+        if not self.position.is_diag:
+            raise ValueError("Position must be diagonal")
 
         def rec_a(i):
             return float(1/np.sqrt(i+1))
@@ -289,8 +287,8 @@ class Series:
         return result
 
     def to_cross(self, degree):
-        if __debug__:
-            assert self.index_set == "triangle"
-            assert degree + self.position.dim - 1 <= self.degree
+        if not self.index_set == "triangle" or \
+           not degree + self.position.dim - 1 <= self.degree:
+            raise ValueError("Invalid argument")
         coeffs = self.coeffs[lib.cross_in_triangle(self.position.dim, degree)]
         return Series(coeffs, self.position, index_set="cross")

@@ -23,14 +23,15 @@ class CompQuad():
 
     def __init__(self, quads, qweights):
 
-        if __debug__:
-            assert len(quads) >= 1
-            assert len(quads) == len(qweights)
+        if not len(quads) >= 1 or \
+           not len(quads) == len(qweights):
+            raise ValueError("Invalid arguments!")
 
         position0 = quads[0].position
 
         for q in quads:
-            assert q.position == position0
+            if not q.position == position0:
+                raise ValueError("Invalid argument(s)!")
 
         self.quads = quads
         self.qweights = qweights
@@ -44,8 +45,8 @@ class CompQuad():
         if isinstance(other, quad.Quad):
             other = CompQuad([other], [1])
 
-        if __debug__:
-            assert isinstance(other, CompQuad)
+        if not isinstance(other, CompQuad):
+            raise ValueError("Invalid argument!")
 
         if len(self.quads) != len(other.quads):
             return False

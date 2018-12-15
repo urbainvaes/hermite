@@ -52,10 +52,10 @@ parser.add_argument('-d', '--degree', type=int)
 args = parser.parse_args()
 
 # Directory for output files
-dir = ""
+dir_out = ""
 if args.directory:
-    dir = args.directory + "/"
-    os.makedirs(dir, exist_ok=True)
+    dir_out = args.directory + "/"
+    os.makedirs(dir_out, exist_ok=True)
 
 # Matplotlib configuration
 matplotlib.rc('font', size=14)
@@ -300,13 +300,13 @@ def convergence_degree():
                     error_series_x = Iy*(Iz*error_series)
                     error = min_quad.norm(error_series, n=1, flat=True)
                     error_x = qx.norm(error_series_x, n=1, flat=True)
-                    min = np.min(qx.eval(Iy_d*(Iz_d*t)))
+                    min_ = np.min(qx.eval(Iy_d*(Iz_d*t)))
                     eig = r_mat(t).coeffs[0]/t.coeffs[0]
                     errors.append(error)
-                    mins.append(abs(min))
+                    mins.append(abs(min_))
                     eigs.append(abs(eig))
                     degrees.append(d)
-                    print(min, eig, error, error_x)
+                    print(min_, eig, error, error_x)
 
                 if args.interactive:
                     plot(t)
@@ -316,21 +316,21 @@ def convergence_degree():
 
     cond = np.asarray(degrees)*0 + 1
     xplot, yplot = np.extract(cond, degrees), np.extract(cond, errors)
-    np.save(dir + "degrees", xplot)
-    np.save(dir + "error_l1", yplot)
+    np.save(dir_out + "degrees", xplot),
+    np.save(dir_out + "error_l1", yplot)
     fig, ax = plt.subplots()
     ax.semilogy(xplot, yplot, 'b.',
                 label="$\\|\\rho_{{ {} }} - \\rho_d\\|_1$".format(degree))
     coeffs = np.polyfit(xplot, np.log10(yplot), 1)
     ax.semilogy(xplot, 10**coeffs[1] * 10**(coeffs[0]*xplot), 'b-')
     yplot = np.extract(cond, eigs)
-    np.save(dir + "error_eig", yplot)
+    np.save(dir_out + "error_eig", yplot)
     ax.semilogy(xplot, yplot, 'r.', label="$|\\lambda_0(d)|$")
     coeffs = np.polyfit(xplot, np.log10(yplot), 1)
     ax.semilogy(xplot, 10**coeffs[1] * 10**(coeffs[0]*xplot), 'r-')
     ax.set_xlabel("$d$")
     plt.legend(loc='upper right')
-    plt.savefig(dir + "errors.eps", bbox_inches='tight')
+    plt.savefig(dir_out + "errors.eps", bbox_inches='tight')
 
 
 if args.convergence_degree or args.convergence_quadratic:
@@ -429,7 +429,7 @@ def convergence_epsilon():
         ex = [qx.norm(tx0 - txi, n=1, flat=True) for txi in tx]
         e3 = [qxy.norm(Iy*(t30 - t3i), n=1, flat=True) for t3i in t3]
 
-    fig, ax = plt.subplots()
+    ax = plt.subplots()[1]
     cmap = matplotlib.cm.get_cmap('viridis_r')
     for i, (εi, txε) in enumerate(zip(εs, tx)):
         if i % 2 is not 0:
@@ -439,16 +439,16 @@ def convergence_epsilon():
         qx.plot(txε, ax=ax, **kwargs)
     ax.set_title("")
     plt.legend()
-    plt.savefig(dir + "convergence-epsilon-" + str(β) + ".eps",
+    plt.savefig(dir_out + "convergence-epsilon-" + str(β) + ".eps",
                 bbox_inches='tight')
 
     fig, ax = plt.subplots()
     xplot = logε = np.asarray(εs)
     yplot1 = np.asarray(e3)
     yplot2 = np.asarray(ex)
-    np.save(dir + "convergence-eps-eps", xplot)
-    np.save(dir + "convergence-eps-e3", yplot1)
-    np.save(dir + "convergence-eps-ex", yplot2)
+    np.save(dir_out + "convergence-eps-eps", xplot)
+    np.save(dir_out + "convergence-eps-e3", yplot1)
+    np.save(dir_out + "convergence-eps-ex", yplot2)
     ax.set_xscale('log', basex=2)
     ax.set_yscale('log', basey=2)
     ax.set_xlabel('$\\varepsilon$')
@@ -463,7 +463,7 @@ def convergence_epsilon():
             label='$y = {:.2f} \\, \\times \\, \\varepsilon^{{ {:.2f} }}$'.
             format(2**coeffs[1], coeffs[0]))
     plt.legend(loc='lower right')
-    plt.savefig(dir + "errors-epsilon-" + str(β) + ".eps",
+    plt.savefig(dir_out + "errors-epsilon-" + str(β) + ".eps",
                 bbox_inches='tight')
     plt.show()
 
@@ -563,9 +563,9 @@ def bifurcation():
             βnum = math.floor(βnum)
 
             plt.ioff()
-            fig, ax = plt.subplots(1, 1)
+            ax = plt.subplots(1, 1)[1]
             qxy.plot(Iy*t, bounds=False, ax=ax)
-            plt.savefig(dir + 'solution-beta=' + str(βnum) + '.eps',
+            plt.savefig(dir_out + 'solution-beta=' + str(βnum) + '.eps',
                         bbox_inches='tight')
             plt.close()
 
@@ -576,15 +576,15 @@ def bifurcation():
             qx.plot(Iy*(Iz*t), bounds=False, ax=ax,
                     label="$\\varepsilon = " + str(ε) + "$")
             plt.legend()
-            plt.savefig(dir + 'solution-proj-beta=' + str(βnum) + '.eps',
+            plt.savefig(dir_out + 'solution-proj-beta=' + str(βnum) + '.eps',
                         bbox_inches='tight')
             plt.close()
             plt.ion()
 
         βnum = newβ
 
-    np.save(dir + "epsilon=" + str(ε).replace('/', 'o') + "-betas", np.asarray(betas))
-    np.save(dir + "epsilon=" + str(ε).replace('/', 'o') + "-ms", np.asarray(ms))
+    np.save(dir_out + "epsilon=" + str(ε).replace('/', 'o') + "-betas", np.asarray(betas))
+    np.save(dir_out + "epsilon=" + str(ε).replace('/', 'o') + "-ms", np.asarray(ms))
 
 
 if args.bifurcation:

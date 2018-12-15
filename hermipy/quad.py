@@ -33,14 +33,15 @@ class Quad:
 
     @staticmethod
     def tensorize(args):
-        if __debug__:
-            assert len(args) > 0 and isinstance(args[0], Quad)
+        if not len(args) > 0 or \
+           not isinstance(args[0], Quad):
+            raise ValueError("Invalid argument(s)!")
         position = hm.Position.tensorize([a.position for a in args])
         nodes, weights = [0]*len(position.dirs), [0]*len(position.dirs)
         factor = sym.Integer(1)
         for a in args:
-            if __debug__:
-                assert isinstance(a, Quad)
+            if not isinstance(a, Quad):
+                raise ValueError("Invalid argument!")
             factor *= a.factor.sym
             for i, d in enumerate(a.position.dirs):
                 nodes[position.dirs.index(d)] = a.nodes[i]
@@ -118,9 +119,8 @@ class Quad:
             if dirs is None:
                 dirs = list(range(dim))
 
-            if __debug__:
-                assert dim == len(bounds)
-                assert dim == len(dirs)
+            assert dim == len(bounds)
+            assert dim == len(dirs)
 
             mean, cov = np.zeros(dim), np.zeros((dim, dim))
             for i in range(dim):
@@ -134,8 +134,7 @@ class Quad:
 
         if isinstance(n_points, int):
             n_points = [n_points]*dim
-        if __debug__:
-            assert dim == len(n_points)
+        assert dim == len(n_points)
         nodes, weights = [], []
         for i in range(dim):
             nodes.append(-np.pi + 2*np.pi*np.arange(n_points[i])/n_points[i])
@@ -158,8 +157,8 @@ class Quad:
         return Quad.tensorize([self, other])
 
     def __eq__(self, other):
-        if __debug__:
-            assert isinstance(other, Quad)
+        if not isinstance(other, Quad):
+            raise ValueError("Invalid argument!")
 
         return self.position == other.position \
             and self.factor == other.factor \
@@ -357,8 +356,8 @@ class Quad:
         if self.factor != hm.Function(1, dirs=self.position.dirs):
             op = op.map(self.factor)
 
-        if __debug__:
-            assert op.dirs == self.position.dirs
+        if not op.dirs == self.position.dirs:
+            raise ValueError("Invalid argument: directions don't match")
         splitop = op.split()
         sparse = hm.settings['sparse'] if sparse is None else sparse
 
@@ -411,8 +410,8 @@ class Quad:
 
     def plot_hf(self, multi_index, ax=None, bounds=True, **kwargs):
 
-        if __debug__:
-            assert len(multi_index) == self.position.dim
+        if not len(multi_index) == self.position.dim:
+            raise ValueError("Invalid argument!")
         dim = len(multi_index)
 
         show_plt = ax is None
@@ -453,8 +452,8 @@ class Quad:
     def plot(self, arg, factor=None, ax=None,
              contours=0, bounds=False, title=None, **kwargs):
 
-        if __debug__:
-            assert self.position.is_diag
+        if not self.position.is_diag:
+            raise ValueError("Invalid argument: position must be diag!")
 
         show_plt = ax is None
         if show_plt:
@@ -465,8 +464,8 @@ class Quad:
             arg = hm.Function(arg, dirs=self.position.dirs)
 
         if isinstance(arg, hm.Function):
-            if __debug__:
-                assert factor is None
+            if factor is not None:
+                raise ValueError("Invalid argument!")
             solution = self.discretize(arg)
 
         elif isinstance(arg, np.ndarray):
@@ -539,10 +538,10 @@ class Quad:
             return plot
 
     def streamlines(self, fx, fy, factor=None, ax=None, **kwargs):
-        if __debug__:
-            assert self.position.is_diag
-            assert isinstance(fx, type(fy))
-            assert self.position.dim is 2
+        if not self.position.is_diag or \
+           not isinstance(fx, type(fy)) or \
+           self.position.dim is not 2:
+            raise ValueError("Invalid argument(s)!")
 
         show_plt = ax is None
         if show_plt:
@@ -554,8 +553,8 @@ class Quad:
             fy = hm.Function(fy, dirs=self.position.dirs)
 
         if isinstance(fx, hm.Function):
-            if __debug__:
-                assert factor is None
+            if factor is not None:
+                raise ValueError("Invalid argument!")
             fx, fy = self.discretize(fx), self.discretize(fy)
 
         elif isinstance(fx, hm.Series):

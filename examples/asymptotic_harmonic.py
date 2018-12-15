@@ -115,7 +115,9 @@ print("Equation for u₀: ")
 sym.pprint(centered[2])
 Z = sym.symbols('Z', real=True)
 solution_0 = sym.exp(-β*Vp)/Z
-assert centered[2].subs(unk[0], solution_0).doit().cancel() == 0
+if not centered[2].subs(unk[0], solution_0).doit().cancel() == 0:
+    print("Error!")
+    exit(0)
 
 # Centering condition for u₁
 for i in range(3, 6):

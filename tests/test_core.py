@@ -24,6 +24,7 @@ class TestConverters(unittest.TestCase):
         n = 5000
         a = rand.rand(n, n)
 
+        
         b1, t_to_cpp_1 = timeit(cpp.to_mat)(a)
         c1, t_to_pyt_1 = timeit(cpp.to_numpy)(b1)
         self.assertAlmostEqual(la.norm(a - c1), 0)
@@ -36,11 +37,13 @@ class TestConverters(unittest.TestCase):
         c3, t_to_pyt_3 = timeit(cpp.to_numpy)(b3)
         self.assertAlmostEqual(la.norm(a - c3), 0)
 
-        # print("\nTimes of conversions to cpp")
-        # print(t_to_cpp_1, t_to_cpp_2, t_to_cpp_3)
+        print_times = False
+        if print_times:
+            print("\nTimes of conversions to cpp")
+            print(t_to_cpp_1, t_to_cpp_2, t_to_cpp_3)
 
-        # print("Times of conversions to python")
-        # print(t_to_pyt_1, t_to_pyt_2, t_to_pyt_3)
+            print("Times of conversions to python")
+            print(t_to_pyt_1, t_to_pyt_2, t_to_pyt_3)
 
     def test_simple_sparse(self):
         matrix = [[0, 1, 0, 0, 0],

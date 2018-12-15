@@ -38,9 +38,9 @@ class Function():
     def tensorize(args):
         dirs, sym = set(), sympy.Integer(1)
         for a in args:
-            if __debug__:
-                assert isinstance(a, Function)
-                assert dirs.intersection(a.dirs) == set()
+            if not isinstance(a, Function) or \
+               not dirs.intersection(a.dirs) == set():
+                raise ValueError("Invalid arguments")
             dirs, sym = dirs.union(a.dirs), sym*a.sym
         return Function(sym, dirs=sorted(dirs))
 
@@ -62,9 +62,8 @@ class Function():
         variables = expr.free_symbols.intersection(self.x_sub)
         if dirs is not None:
             self.dirs = dirs
-            if __debug__:
-                assert dim is None
-                assert self.dirs == sorted(self.dirs)
+            if dim is not None or not self.dirs == sorted(self.dirs):
+                raise ValueError("Invalid arguments")
         elif dim is not None:
             self.dirs = list(range(dim))
         else:
@@ -72,8 +71,7 @@ class Function():
             dim = 0 if variables == set() else \
                   max(self.x_sub.index(s) for s in variables) + 1
             self.dirs = list(range(dim))
-        if __debug__:
-            assert variables.issubset({self.x_sub[d] for d in self.dirs})
+        assert variables.issubset({self.x_sub[d] for d in self.dirs})
 
     def __eq__(self, other):
         return self.dirs == other.dirs and \
@@ -86,24 +84,24 @@ class Function():
     def __mul__(self, other):
         if not isinstance(other, Function):
             other = Function(other, dirs=self.dirs)
-        if __debug__:
-            assert self.dirs == other.dirs
+        if not self.dirs == other.dirs:
+            raise ValueError("Invalid argument")
         sym = self.sym * other.sym
         return Function(sym, dirs=self.dirs)
 
     def __truediv__(self, other):
         if not isinstance(other, Function):
             other = Function(other, dirs=self.dirs)
-        if __debug__:
-            assert self.dirs == other.dirs
+        if not self.dirs == other.dirs:
+            raise ValueError("Invalid argument")
         sym = self.sym / other.sym
         return Function(sym, dirs=self.dirs)
 
     def __add__(self, other):
         if not isinstance(other, Function):
             other = Function(other, dirs=self.dirs)
-        if __debug__:
-            assert self.dirs == other.dirs
+        if not self.dirs == other.dirs:
+            raise ValueError("Invalid argument")
         sym = self.sym + other.sym
         return Function(sym, dirs=self.dirs)
 
@@ -127,8 +125,7 @@ class Function():
     def project(self, dirs):
         dirs = dirs if isinstance(dirs, list) else [dirs]
         split_fun = self.split(legacy=False)
-        if __debug__:
-            assert len(split_fun) == 1
+        assert len(split_fun) == 1
 
         # Absorb constant in projection on lowest index
         if self.dirs[0] in dirs:

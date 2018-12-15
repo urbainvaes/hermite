@@ -20,7 +20,7 @@ fp_operator = - flux_x.diff(x) - flux_y.diff(y)
 d = 50             # Number of basis functions in each direction
 sx, sy = .05, .05  # Scaling of basis functions along x and y
 
-# Set multiplier function 
+# Set multiplier function
 # (= ratio between basis functions and scaled Hermite polynomials)
 factor = sym.exp(-x*x/sx/4 - y*y/sy/4) * sym.exp(- beta*Vp/2 - Vy/2)
 

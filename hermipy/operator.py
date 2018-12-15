@@ -37,8 +37,8 @@ class Operator():
         aux = func.Function(expr)
 
         if aux.sym == 0:
-            if __debug__:
-                assert dirs is not None
+            if dirs is None:
+                raise ValueError("Invalid argument!")
             self.sym, self.dirs = aux.sym, dirs
             return
 
@@ -49,8 +49,7 @@ class Operator():
         self.sym = aux.sym.subs(functions[0].func, self.f)
         variables = list(self.sym.atoms(sympy.function.AppliedUndef))[0].args
         self.dirs = [func.Function.x_sub.index(v) for v in variables]
-        if __debug__:
-            assert len(self.dirs) is len(functions[0].args)
+        assert len(self.dirs) is len(functions[0].args)
 
     def __eq__(self, other):
         return self.dirs == other.dirs and \
@@ -63,22 +62,22 @@ class Operator():
     def __mul__(self, other):
         if not isinstance(other, func.Function):
             other = func.Function(other, dirs=self.dirs)
-        if __debug__:
-            assert self.dirs == other.dirs
+        if not self.dirs == other.dirs:
+            raise ValueError("Invalid argument!")
         return Operator(self.sym*other.sym, dirs=self.dirs)
 
     def __add__(self, other):
         if not isinstance(other, Operator):
             other = Operator(other, dirs=self.dirs)
-        if __debug__:
-            assert self.dirs == other.dirs
+        if not self.dirs == other.dirs:
+            raise ValueError("Invalid argument!")
         return Operator(self.sym + other.sym, dirs=self.dirs)
 
     def __sub__(self, other):
         if not isinstance(other, Operator):
             other = Operator(other, dirs=self.dirs)
-        if __debug__:
-            assert self.dirs == other.dirs
+        if not self.dirs == other.dirs:
+            raise ValueError("Invalid argument!")
         return Operator(self.sym - other.sym, dirs=self.dirs)
 
     def __neg__(self):

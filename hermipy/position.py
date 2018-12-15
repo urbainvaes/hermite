@@ -32,12 +32,11 @@ class Position:
         # Check that directions appear at most twice
         dirs = []
         for a in args:
-            if __debug__:
-                assert isinstance(a, Position)
-                assert a.is_diag
+            if not isinstance(a, Position) or not a.is_diag:
+                raise ValueError("Invalid arguments")
             for d in a.dirs:
-                if __debug__:
-                    assert dirs.count(d) <= 1
+                if not dirs.count(d) <= 1:
+                    raise ValueError("Direction appears more than once")
                 dirs.append(d)
 
         def _tensorize(p1, p2):
@@ -49,9 +48,8 @@ class Position:
             # Check removed directions match
             for d in [d for d in p1.dirs if d in p2.dirs]:
                 i1, i2 = p1.dirs.index(d), p2.dirs.index(d)
-                if __debug__:
-                    assert p1.mean[i1] == p2.mean[i2]
-                    assert p1.cov[i1][i1] == p2.cov[i2][i2]
+                assert p1.mean[i1] == p2.mean[i2]
+                assert p1.cov[i1][i1] == p2.cov[i2][i2]
 
             # Tensorization
             for d in dirs_result:
@@ -83,17 +81,12 @@ class Position:
             raise ValueError("All args are None!")
 
         # Checks
-        if __debug__:
-            if mean is not None:
-                assert self.dim == len(mean)
-            if cov is not None:
-                assert self.dim == len(cov)
-            if dirs is not None:
-                assert self.dim == len(dirs)
-            if dim is not None:
-                assert self.dim == dim
-            if types is not None:
-                assert self.dim == len(types)
+        if mean is not None and not self.dim == len(mean) or \
+           cov is not None and not self.dim == len(cov) or \
+           dirs is not None and not self.dim == len(dirs) or \
+           dim is not None and not self.dim == dim or \
+           types is not None and not self.dim == len(types):
+            raise ValueError("Invalid arguments dim/dirs")
 
         # Defaults to first directions
         self.dirs = list(range(dim)) if dirs is None else dirs
@@ -122,8 +115,8 @@ class Position:
             and self.types == other.types
 
     def __mul__(self, other):
-        if __debug__:
-            assert isinstance(other, Position)
+        if not isinstance(other, Position):
+            raise ValueError("Invalid argument")
         return Position.tensorize([self, other])
 
     def __repr__(self):
@@ -146,17 +139,15 @@ class Position:
         return normalization * sym.exp(-potential)
 
     def weights(self):
-        if __debug__:
-            assert self.is_diag
+        if not self.is_diag:
+            raise ValueError("Invalid: is_diag must be True")
         return [self.project(d).weight() for d in self.dirs]
 
     def project(self, directions):
-        if __debug__:
-            assert self.is_diag
         if isinstance(directions, int):
             directions = [directions]
-        if __debug__:
-            assert directions == sorted(directions)
+        if not self.is_diag or not directions == sorted(directions):
+            raise ValueError("Invalid arguments")
         dirs, dim = directions, len(directions)
         mean, cov, types = np.zeros(dim), np.zeros((dim, dim)), [""]*dim
         rel_dirs = [self.dirs.index(d) for d in directions]

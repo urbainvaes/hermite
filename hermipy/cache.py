@@ -81,7 +81,8 @@ def gen_error(extend=None):
         elif isinstance(u, np.ndarray):
             return la.norm(u - v, 2)
         elif isinstance(u, sparse.csr_matrix):
-            assert isinstance(v, sparse.csr_matrix)
+            if not isinstance(v, sparse.csr_matrix):
+                raise ValueError("Type mismatch")
             return la.norm(u.data - v.data, 2)
         elif isinstance(u, tuple):
             return sum([the_error(ui, vi) for ui, vi in zip(u, v)])

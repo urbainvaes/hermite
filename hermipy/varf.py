@@ -39,8 +39,8 @@ class Varf:
     def tensorize(args, sparse=None):
 
         for a in args:
-            if __debug__:
-                assert isinstance(a, Varf)
+            if not isinstance(a, Varf):
+                raise ValueError("Invalid argument(s)")
 
         if len(args) == 1:
             return args[0]
@@ -50,10 +50,10 @@ class Varf:
         mats = {}
         factor = 1
         for a in args:
-            if __debug__:
-                assert isinstance(a, Varf)
-                assert a.index_set == index_set
-                assert a.degree == degree
+            if not isinstance(a, Varf) or \
+               not a.index_set == index_set or \
+               not a.degree == degree:
+                raise ValueError("Invalid argument(s)")
             key = frozenset(a.position.dirs)
             mats[key] = a.matrix
             factor *= a.factor.sym
@@ -72,13 +72,12 @@ class Varf:
         dim, npolys = self.position.dim, self.matrix.shape[0]
         self.degree = core.iterator_get_degree(dim, npolys,
                                                index_set=index_set)
-        if __debug__:
-            assert len(self.multi_indices()) == self.matrix.shape[0]
+        assert len(self.multi_indices()) == self.matrix.shape[0]
         self.factor = func.Function(factor, dirs=self.position.dirs)
 
     def __eq__(self, other):
-        if __debug__:
-            assert isinstance(other, Varf)
+        if not isinstance(other, Varf):
+            raise ValueError("Invalid argument")
         norm_func = las.norm if self.is_sparse and other.is_sparse else la.norm
         return self.position == other.position \
             and norm_func(self.matrix - other.matrix) < very_small
@@ -89,10 +88,10 @@ class Varf:
             new_matrix = self.matrix + other
 
         elif isinstance(other, Varf):
-            if __debug__:
-                assert self.position == other.position
-                assert self.index_set == other.index_set
-                assert self.factor == other.factor
+            if not self.position == other.position or \
+               not self.index_set == other.index_set or \
+               not self.factor == other.factor:
+                raise ValueError("Invalid argument")
             new_matrix = self.matrix + other.matrix
 
         else:
@@ -109,8 +108,8 @@ class Varf:
                         factor=self.factor, index_set=self.index_set)
 
         elif isinstance(other, Varf):
-            if __debug__:
-                assert self.index_set == other.index_set
+            if not self.index_set == other.index_set:
+                raise ValueError("Invalid argument!")
             return Varf.tensorize([self, other])
 
         else:
@@ -126,10 +125,10 @@ class Varf:
         return self * (-1)
 
     def __call__(self, series):
-        if __debug__:
-            assert self.position == series.position
-            assert self.index_set == series.index_set
-            assert isinstance(series, hs.Series)
+        if not self.position == series.position or \
+           not self.index_set == series.index_set or \
+           not isinstance(series, hs.Series):
+            raise ValueError("Invalid argument!")
         coeffs = self.matrix.dot(series.coeffs)
         return hs.Series(coeffs, self.position,
                          factor=self.factor, index_set=self.index_set)
@@ -146,8 +145,8 @@ class Varf:
                     factor=factor, index_set=self.index_set)
 
     def subdegree(self, degree):
-        if __debug__:
-            assert degree <= self.degree
+        if not degree <= self.degree:
+            raise ValueError("Invalid argument: degree too high!")
         n_polys = core.iterator_size(self.position.dim, degree,
                                      index_set=self.index_set)
         kwargs = {'order': 'C'} if not self.is_sparse else {}
@@ -160,19 +159,20 @@ class Varf:
                                           index_set=self.index_set)
 
     def to_cross(self, degree):
-        if __debug__:
-            assert self.index_set == "triangle"
-            assert degree + self.position.dim - 1 <= self.degree
+        if not self.index_set == "triangle" or \
+           not degree + self.position.dim - 1 <= self.degree:
+            raise ValueError("Invalid argument!")
         inds_triangle = lib.cross_in_triangle(self.position.dim, degree)
         matrix = self.matrix[np.ix_(inds_triangle, inds_triangle)]
         return Varf(matrix, self.position,
                     factor=self.factor, index_set="cross")
 
-    def solve(self, series, use_gmres=False,\
+    def solve(self, series, use_gmres=False,
               remove0=False, remove_vec=None, **kwargs):
-        if __debug__:
-            assert self.position == series.position
-            assert self.index_set == series.index_set
+        if not self.position == series.position or \
+           not self.index_set == series.index_set:
+            raise ValueError("Invalid argument: \
+                              position and index set must coincide!")
 
         if remove0 or remove_vec is not None:
             vstack, hstack = (np.vstack, np.hstack) if not self.is_sparse \
@@ -249,7 +249,7 @@ class Varf:
                     ij = self.matrix[i][j]
                     if abs(ij) > 1e-9:
                         rows.append(i)
-                        cols.append(j) 
+                        cols.append(j)
                         data.append(abs(ij))
 
         pl = ax.scatter(rows, cols, c=data, cmap='ocean_r',
